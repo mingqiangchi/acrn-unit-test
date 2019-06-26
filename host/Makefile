@@ -11,6 +11,7 @@ BASEDIR := $(HV_ROOTDIR)
 
 LIB_MOD = $(HV_MODDIR)/lib_mod.a
 BOOT_MOD = $(HV_MODDIR)/boot_mod.a
+HW_MOD = $(HV_MODDIR)/hw_mod.a
 
 BOARD ?= apl-mrb
 
@@ -92,21 +93,32 @@ ifeq ("$(MAKECMDGOALS)", "boot-bin")
 	MODULES += $(LIB_MOD)
 	MODULES += $(BOOT_MOD)
 endif
+ifeq ("$(MAKECMDGOALS)", "hw-bin")
+	STUB_C_SRCS += src/hw_stub.c
+	MODULES += $(LIB_MOD)
+	MODULES += $(BOOT_MOD)
+	MODULES += $(HW_MOD)
+endif
 
 STUB_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(STUB_C_SRCS))
 
-.PHONY: lib boot
+.PHONY: lib boot hw
 lib:
 	$(MAKE) -C $(HV_ROOTDIR) HV_OBJDIR=$(HV_OBJDIR) BOARD=$(BOARD) \
 		FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) lib-mod
 boot:
 	$(MAKE) -C $(HV_ROOTDIR) HV_OBJDIR=$(HV_OBJDIR) BOARD=$(BOARD) \
 		FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) boot-mod
+hw:
+	$(MAKE) -C $(HV_ROOTDIR) HV_OBJDIR=$(HV_OBJDIR) BOARD=$(BOARD) \
+		FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) hw-mod
+
 $(LIB_MOD): 	lib
 $(BOOT_MOD):	boot
+$(HW_MOD):   	hw
 
-.PHONY: boot-bin
-boot-bin: \
+.PHONY: boot-bin hw-bin
+boot-bin hw-bin: \
 	$(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
