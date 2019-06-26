@@ -1,0 +1,21 @@
+
+1. Configure the hypervisor absolute path by environment variable
+   a) export HV_ROOTDIR = /xxxx/acrn-ebtool/acrn-hypervisor/hypervisor
+
+   b) or add this variable in  ~/.bashrc
+   HV_ROOTDIR = "/xxxx/acrn-ebtool/acrn-hypervisor/hypervisor"
+
+   source ~/.bashrc
+
+2. build for mrb
+   cd acrn-unit-test/host
+   ## it will copy acrn.* from host/build to acrn_ebtool/out
+   make boot-bin or hw-bin or vp-base-bin ...
+   cd acrn-ebtool
+   make sos_boot
+   make flash_acrn
+
+3. build for nuc
+   cd acrn-unit-test/host
+   ## it will copy acrn.* from host/build to acrn_ebtool/out
+   make boot-bin or hw-bin or vp-base-bin BOARD=apl-nuc ...
