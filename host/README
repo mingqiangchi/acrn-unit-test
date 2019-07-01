@@ -17,5 +17,20 @@
 
 3. build for nuc
    cd acrn-unit-test/host
+   make defconfig BOARD=nuc7i7bnh
+   make menuconfig
+	Set ACRN Scenario as “Logical Partition VMs”;
+        Set Maximum number of VCPUs per VM as “2”;
+        Set Maximum number of PCPU as “4”;
+        Clear/Disable “Enable hypervisor relocation”.
+
    ## it will copy acrn.* from host/build to acrn_ebtool/out
-   make boot-bin or hw-bin or vp-base-bin BOARD=apl-nuc ...
+   make boot-bin or hw-bin or vp-base-bin BOARD=nuc7i7bnh ...
+
+   Copy acrn.32.out to a removable disk.
+   Plug in the removable disk into the NUC’s USB port.
+   Copy the acrn.32.out from removable disk to /boot directory.
+
+please refer to "Update ACRN hypervisor Image" and "Update Ubuntu GRUB to Boot hypervisor and Load Kernel Image"
+in the following link:
+https://projectacrn.github.io/latest/tutorials/using_partition_mode_on_nuc.html

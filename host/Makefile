@@ -12,15 +12,15 @@ BASEDIR := $(HV_ROOTDIR)
 LIB_MOD = $(HV_MODDIR)/lib_mod.a
 BOOT_MOD = $(HV_MODDIR)/boot_mod.a
 HW_MOD = $(HV_MODDIR)/hw_mod.a
+VP_BASE_MOD = $(HV_MODDIR)/vp_base_mod.a
 
-BOARD ?= apl-mrb
 
-ifeq ($(BOARD),apl-nuc)
+ifeq ("$(BOARD)", $(filter "$(BOARD)","apl-nuc" "nuc7i7bnh" "nuc6cayh"))
 FIRMWARE ?= uefi
-else ifeq ($(BOARD),nuc6cayh)
-FIRMWARE ?= uefi
-endif
+else
 FIRMWARE ?= sbl
+endif
+
 
 RELEASE ?= 0
 
@@ -100,9 +100,17 @@ ifeq ("$(MAKECMDGOALS)", "hw-bin")
 	MODULES += $(HW_MOD)
 endif
 
+ifeq ("$(MAKECMDGOALS)", "vp-base-bin")
+	STUB_C_SRCS += src/vp_base_stub.c
+	MODULES += $(LIB_MOD)
+	MODULES += $(BOOT_MOD)
+	MODULES += $(HW_MOD)
+	MODULES += $(VP_BASE_MOD)
+endif
+
 STUB_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(STUB_C_SRCS))
 
-.PHONY: lib boot hw
+.PHONY: lib boot hw vp_base
 lib:
 	$(MAKE) -C $(HV_ROOTDIR) HV_OBJDIR=$(HV_OBJDIR) BOARD=$(BOARD) \
 		FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) lib-mod
@@ -112,13 +120,17 @@ boot:
 hw:
 	$(MAKE) -C $(HV_ROOTDIR) HV_OBJDIR=$(HV_OBJDIR) BOARD=$(BOARD) \
 		FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) hw-mod
+vp_base:
+	$(MAKE) -C $(HV_ROOTDIR) HV_OBJDIR=$(HV_OBJDIR) BOARD=$(BOARD) \
+		FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) vp-base-mod
 
 $(LIB_MOD): 	lib
 $(BOOT_MOD):	boot
 $(HW_MOD):   	hw
+$(VP_BASE_MOD): vp_base
 
-.PHONY: boot-bin hw-bin
-boot-bin hw-bin: \
+.PHONY: boot-bin hw-bin vp-base-bin
+boot-bin hw-bin vp-base-bin: \
 	$(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
@@ -126,7 +138,7 @@ $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
 
 $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
-ifeq ($(BOARD),apl-mrb)
+ifeq ($(FIRMWARE),sbl)
 	cp -f $(HV_OBJDIR)/$(HV_FILE).* $(HV_ROOTDIR)/../../out/hv/apl-mrb-sbl/hypervisor/
 else
 	$(MAKE) -C $(BASEDIR)/../efi-stub HV_OBJDIR=$(HV_OBJDIR) EFI_OBJDIR=$(HV_OBJDIR)/efi-stub
